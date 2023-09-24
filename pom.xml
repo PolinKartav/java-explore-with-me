@@ -15,7 +15,9 @@
 		<module>statistics</module>
 		<module>statistics/service</module>
 		<module>util</module>
-	</modules>
+        <module>main</module>
+        <module>main/main-server</module>
+    </modules>
 
 	<groupId>ru.practicum</groupId>
 	<artifactId>explore-with-me</artifactId>
