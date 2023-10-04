@@ -13,11 +13,9 @@
 	<name>Explore With Me</name>
 	<modules>
 		<module>statistics</module>
-		<module>statistics/service</module>
 		<module>util</module>
         <module>main</module>
-        <module>main/main-server</module>
-    </modules>
+	</modules>
 
 	<groupId>ru.practicum</groupId>
 	<artifactId>explore-with-me</artifactId>
