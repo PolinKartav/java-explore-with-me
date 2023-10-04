@@ -120,7 +120,7 @@ public class EventServiceImpl implements EventService {
         Event event = getEventById(eventId);
 
         if (!event.getInitiator().getId().equals(userId)) {
-            throw new NotFoundException("События с id = " +eventId + " не существует");
+            throw new NotFoundException("События с id = " + eventId + " не существует");
         }
 
         if (event.getState().equals(EventStatus.PUBLISHED)) {
