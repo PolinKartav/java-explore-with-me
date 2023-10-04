@@ -53,8 +53,8 @@ public class RequestServiceImpl implements RequestService {
         }
 
         BooleanBuilder builder = new BooleanBuilder();
-        //builder.and(QRequest.request.event.id.eq(eventId));
-        //builder.and(QRequest.request.requester.id.eq(userId));
+        builder.and(QRequest.request.event.id.eq(eventId));
+        builder.and(QRequest.request.requester.id.eq(userId));
         if (requestRepository.count(builder) > 0) {
             throw new AlreadyExistedException("Запрос уже существует");
         }
