@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.ewm.main.application.error.ErrorResponse;
 import ru.practicum.ewm.main.util.exception.AlreadyExistedException;
+import ru.practicum.ewm.main.util.exception.AlreadyUsedException;
 import ru.practicum.ewm.main.util.exception.NotFoundException;
 
 import javax.validation.ValidationException;
@@ -26,7 +27,8 @@ public class ErrorHandler {
                 .build();
     }
 
-    @ExceptionHandler({AlreadyExistedException.class})
+    @ExceptionHandler({AlreadyExistedException.class,
+            AlreadyUsedException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleAlreadyExists(final RuntimeException e) {
         return ErrorResponse.builder()

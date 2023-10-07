@@ -35,15 +35,15 @@ public class Compilation {
     private Long id;
 
     @Column(nullable = false)
-    Boolean pinned;
+    private Boolean pinned;
 
     @Column(nullable = false, unique = true)
-    String title;
+    private String title;
 
     @ToString.Exclude
     @ManyToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
     @JoinTable(name = "event_compilation",
             joinColumns = {@JoinColumn(name = "compilation_id")},
             inverseJoinColumns = @JoinColumn(name = "event_id"))
-    Set<Event> events;
+    private Set<Event> events;
 }

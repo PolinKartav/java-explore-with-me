@@ -20,6 +20,7 @@ import ru.practicum.ewm.main.application.event.RequestStatusUpdateRequest;
 import ru.practicum.ewm.main.application.event.RequestStatusUpdateResult;
 import ru.practicum.ewm.main.application.request.ParticipationRequestDto;
 import ru.practicum.ewm.main.server.service.EventService;
+import ru.practicum.ewm.main.server.service.RequestService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -32,6 +33,7 @@ import java.util.List;
 @Validated
 public class PrivateEventController {
     private final EventService service;
+    private final RequestService requestService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -60,7 +62,7 @@ public class PrivateEventController {
     @GetMapping("/{eventId}/requests")
     public List<ParticipationRequestDto> getRequests(@PathVariable @Min(1) Long userId,
                                                      @PathVariable @Min(1) Long eventId) {
-        return service.getRequests(eventId, userId);
+        return requestService.getRequests(eventId, userId);
     }
 
     @PatchMapping("/{eventId}/requests")

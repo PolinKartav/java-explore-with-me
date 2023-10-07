@@ -15,6 +15,7 @@ import ru.practicum.ewm.main.server.repository.CategoryRepository;
 import ru.practicum.ewm.main.server.repository.EventRepository;
 import ru.practicum.ewm.main.server.service.CategoryService;
 import ru.practicum.ewm.main.util.exception.AlreadyExistedException;
+import ru.practicum.ewm.main.util.exception.AlreadyUsedException;
 import ru.practicum.ewm.main.util.exception.NotFoundException;
 import ru.practicum.util.pageable.OffsetBasedPageRequest;
 
@@ -52,13 +53,13 @@ public class CategoryServiceImpl implements CategoryService {
         builder.and(QEvent.event.category.id.in(catId));
 
         if (eventRepository.count(builder) > 0) {
-            throw new AlreadyExistedException("Category with ID = " + catId + " already used.");
+            throw new AlreadyUsedException("Category with ID = " + catId + " is used.");
         }
 
         try {
             categoryRepository.deleteById(catId);
         } catch (DataIntegrityViolationException e) {
-            throw new AlreadyExistedException("Category with ID = " + catId + " already used.");
+            throw new AlreadyUsedException("Category with ID = " + catId + " is used.");
         }
     }
 

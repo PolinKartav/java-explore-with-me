@@ -98,7 +98,19 @@ public class RequestServiceImpl implements RequestService {
         return mapper.toParticipationRequestDto(requestRepository.save(request));
     }
 
-    public Request makeRequest(Event event, User user) {
+    @Override
+    public List<ParticipationRequestDto> getRequests(Long eventId, Long userId) {
+        getEventById(eventId);
+
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(QRequest.request.event.id.eq(eventId));
+
+        return StreamSupport.stream(requestRepository.findAll(builder, SORT_BY_ID_ASC).spliterator(), false)
+                .map(mapper::toParticipationRequestDto)
+                .collect(Collectors.toList());
+    }
+
+    private Request makeRequest(Event event, User user) {
         return Request.builder()
                 .requester(user)
                 .createDate(LocalDateTime.now())

@@ -7,25 +7,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewm.main.application.event.EventFullDto;
-import ru.practicum.ewm.main.application.event.EventShortDto;
-import ru.practicum.ewm.main.application.event.EventSort;
-import ru.practicum.ewm.main.application.event.EventStatus;
-import ru.practicum.ewm.main.application.event.EventUpdateAdminRequest;
-import ru.practicum.ewm.main.application.event.EventUpdateRequest;
-import ru.practicum.ewm.main.application.event.EventUpdateUserRequest;
-import ru.practicum.ewm.main.application.event.NewEventDto;
-import ru.practicum.ewm.main.application.event.RequestStatusUpdateRequest;
-import ru.practicum.ewm.main.application.event.RequestStatusUpdateResult;
-import ru.practicum.ewm.main.application.event.StateAction;
-import ru.practicum.ewm.main.application.request.ParticipationRequestDto;
+import ru.practicum.ewm.main.application.event.*;
 import ru.practicum.ewm.main.application.request.RequestStatus;
-import ru.practicum.ewm.main.server.entity.Category;
-import ru.practicum.ewm.main.server.entity.Event;
-import ru.practicum.ewm.main.server.entity.QEvent;
-import ru.practicum.ewm.main.server.entity.QRequest;
-import ru.practicum.ewm.main.server.entity.Request;
-import ru.practicum.ewm.main.server.entity.User;
+import ru.practicum.ewm.main.server.entity.*;
 import ru.practicum.ewm.main.server.mapper.EventMapper;
 import ru.practicum.ewm.main.server.mapper.LocationMapper;
 import ru.practicum.ewm.main.server.mapper.RequestMapper;
@@ -45,11 +29,7 @@ import ru.practicum.util.pageable.OffsetBasedPageRequest;
 import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -269,18 +249,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<ParticipationRequestDto> getRequests(Long eventId, Long userId) {
-        getEventById(eventId);
-
-        BooleanBuilder builder = new BooleanBuilder();
-        builder.and(QRequest.request.event.id.eq(eventId));
-
-        return StreamSupport.stream(requestRepository.findAll(builder, SORT_BY_ID_ASC).spliterator(), false)
-                .map(requestMapper::toParticipationRequestDto)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     @Transactional
     public RequestStatusUpdateResult updateRequestStatus(RequestStatusUpdateRequest dto, Long eventId, Long userId) {
         getUserById(userId);
@@ -449,7 +417,7 @@ public class EventServiceImpl implements EventService {
         QEvent qEvent = QEvent.event;
 
         Event event = query
-               .selectFrom(qEvent)
+                .selectFrom(qEvent)
                 .where(qEvent.id.in(ids))
                 .orderBy(qEvent.createdOn.asc())
                 .fetchFirst();
