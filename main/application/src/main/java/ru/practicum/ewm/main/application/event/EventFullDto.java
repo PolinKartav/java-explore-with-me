@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-public class EventFullDto {
+public class EventFullDto extends EventBaseDto {
     private Long id;
     private String title;
     private String annotation;

@@ -31,7 +31,6 @@ CREATE TABLE IF NOT EXISTS event
     paid               BOOLEAN DEFAULT FALSE,
     request_moderation BOOLEAN DEFAULT TRUE,
     participant_limit  BIGINT  DEFAULT 0,
-    confirmed_requests BIGINT  DEFAULT 0,
     state              VARCHAR(16),
     create_date        TIMESTAMP WITHOUT TIME ZONE,
     published_date     TIMESTAMP WITHOUT TIME ZONE,

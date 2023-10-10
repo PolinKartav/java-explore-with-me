@@ -85,7 +85,4 @@ public class Event {
     @Column(name = "state")
     @Enumerated(EnumType.STRING)
     private EventStatus state;
-
-    @Column(name = "confirmed_requests")
-    private Long confirmedRequests;
 }

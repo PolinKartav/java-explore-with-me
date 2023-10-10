@@ -8,10 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.main.application.event.EventStatus;
 import ru.practicum.ewm.main.application.request.ParticipationRequestDto;
 import ru.practicum.ewm.main.application.request.RequestStatus;
-import ru.practicum.ewm.main.server.entity.Event;
-import ru.practicum.ewm.main.server.entity.QRequest;
-import ru.practicum.ewm.main.server.entity.Request;
-import ru.practicum.ewm.main.server.entity.User;
+import ru.practicum.ewm.main.server.entity.*;
 import ru.practicum.ewm.main.server.mapper.RequestMapper;
 import ru.practicum.ewm.main.server.repository.EventRepository;
 import ru.practicum.ewm.main.server.repository.RequestRepository;
@@ -48,7 +45,7 @@ public class RequestServiceImpl implements RequestService {
         if (event.getInitiator().getId().equals(userId)) {
             throw new AlreadyExistedException("Событие с таким id = " + eventId + " уже существует");
         }
-        if (event.getParticipantLimit() > 0 && event.getParticipantLimit() - event.getConfirmedRequests() <= 0) {
+        if (event.getParticipantLimit() > 0 && event.getParticipantLimit() - getConfirmedRequests(eventId) <= 0) {
             throw new AlreadyExistedException("Количество заявок на участие в мероприятии было ограничено.");
         }
 
@@ -63,7 +60,6 @@ public class RequestServiceImpl implements RequestService {
 
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
             request.setStatus(RequestStatus.CONFIRMED);
-            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
         }
 
         eventRepository.save(event);
@@ -135,5 +131,13 @@ public class RequestServiceImpl implements RequestService {
         return requestRepository.findById(requestId).orElseThrow(
                 () -> new NotFoundException("Запроса с таким id = " + requestId + " не существует")
         );
+    }
+
+    private Long getConfirmedRequests(Long eventId) {
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(QRequest.request.event.id.eq(eventId));
+        builder.and(QRequest.request.status.eq(RequestStatus.CONFIRMED));
+
+        return requestRepository.count(builder);
     }
 }

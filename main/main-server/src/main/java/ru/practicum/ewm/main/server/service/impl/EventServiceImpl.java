@@ -1,6 +1,7 @@
 package ru.practicum.ewm.main.server.service.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static com.querydsl.core.group.GroupBy.groupBy;
 import static ru.practicum.util.constant.Constants.SORT_BY_ID_ASC;
 
 @Service
@@ -59,7 +61,6 @@ public class EventServiceImpl implements EventService {
 
         event.setInitiator(user);
         event.setCreatedOn(LocalDateTime.now());
-        event.setConfirmedRequests(0L);
         event.setState(EventStatus.PENDING);
 
         return eventMapper.toEventFullDto(eventRepository.save(event));
@@ -70,7 +71,10 @@ public class EventServiceImpl implements EventService {
         Event event = getEventById(eventId);
 
         if (event.getInitiator().getId().equals(userId)) {
-            return eventMapper.toEventFullDto(event);
+            EventFullDto dto = eventMapper.toEventFullDto(event);
+            dto.setConfirmedRequests(getConfirmedRequests(eventId));
+
+            return dto;
         }
 
         throw new NotFoundException("События с id = " + eventId + " не существует");
@@ -85,11 +89,15 @@ public class EventServiceImpl implements EventService {
 
         Pageable pageable = new OffsetBasedPageRequest(from, size, SORT_BY_ID_ASC);
 
-        return eventRepository.findAll(builder, pageable)
+        List<EventShortDto> list = eventRepository.findAll(builder, pageable)
                 .getContent()
                 .stream()
                 .map(eventMapper::toEventShortDto)
                 .collect(Collectors.toList());
+
+        setConfirmedRequest(list);
+
+        return list;
     }
 
     @Override
@@ -118,7 +126,11 @@ public class EventServiceImpl implements EventService {
             event.setState(EventStatus.PENDING);
         }
 
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+        EventFullDto eventDto = eventMapper.toEventFullDto(eventRepository.save(event));
+
+        eventDto.setConfirmedRequests(getConfirmedRequests(eventId));
+
+        return eventDto;
     }
 
     @Override
@@ -153,7 +165,7 @@ public class EventServiceImpl implements EventService {
 
         statisticsClient.postHit(httpServletRequest);
 
-        Collection<EventShortDto> dtos = eventRepository.findAll(builder, pageable)
+        List<EventShortDto> dtos = eventRepository.findAll(builder, pageable)
                 .getContent()
                 .stream()
                 .map(eventMapper::toEventShortDto)
@@ -164,6 +176,8 @@ public class EventServiceImpl implements EventService {
 
             dtos.forEach(dto -> dto.setViews(views.get(dto.getId())));
         }
+
+        setConfirmedRequest(dtos);
 
         return dtos;
     }
@@ -189,11 +203,15 @@ public class EventServiceImpl implements EventService {
 
         Pageable pageable = new OffsetBasedPageRequest(from, size, SORT_BY_ID_ASC);
 
-        return eventRepository.findAll(builder, pageable)
+        List<EventFullDto> dtos = eventRepository.findAll(builder, pageable)
                 .getContent()
                 .stream()
                 .map(eventMapper::toEventFullDto)
                 .collect(Collectors.toList());
+
+        setConfirmedRequest(dtos);
+
+        return dtos;
     }
 
     @Override
@@ -212,6 +230,8 @@ public class EventServiceImpl implements EventService {
                         List.of("/events/" + eventId),
                         true)
                 .size());
+
+        dto.setConfirmedRequests(getConfirmedRequests(eventId));
 
         return dto;
     }
@@ -238,6 +258,7 @@ public class EventServiceImpl implements EventService {
         if (dto.getStateAction() != null
                 && dto.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
             event.setState(EventStatus.PUBLISHED);
+            event.setPublishedOn(LocalDateTime.now());
         }
 
         if (dto.getStateAction() != null
@@ -245,7 +266,11 @@ public class EventServiceImpl implements EventService {
             event.setState(EventStatus.CANCELED);
         }
 
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+        EventFullDto eventDto = eventMapper.toEventFullDto(eventRepository.save(event));
+
+        eventDto.setConfirmedRequests(getConfirmedRequests(eventId));
+
+        return eventDto;
     }
 
     @Override
@@ -265,7 +290,7 @@ public class EventServiceImpl implements EventService {
             throw new AlreadyExistedException("Событие не модерируется.");
         }
         if (status.equals(RequestStatus.CONFIRMED) &&
-                event.getParticipantLimit() - event.getConfirmedRequests() <= 0) {
+                event.getParticipantLimit() - getConfirmedRequests(eventId) <= 0) {
             throw new AlreadyExistedException("Количество заявок на участие в мероприятии достигло предела");
         }
 
@@ -284,10 +309,9 @@ public class EventServiceImpl implements EventService {
                         throw new AlreadyExistedException("Запрос с id = " + r.getId() + " не находится на рассмотрении");
                     }
 
-                    if (event.getParticipantLimit() - event.getConfirmedRequests() <= 0) {
+                    if (event.getParticipantLimit() - getConfirmedRequests(eventId) <= 0) {
                         r.setStatus(RequestStatus.REJECTED);
                     } else {
-                        event.setConfirmedRequests(event.getConfirmedRequests() + 1);
                         r.setStatus(status);
                     }
                 });
@@ -386,7 +410,11 @@ public class EventServiceImpl implements EventService {
         }
 
         if (onlyAvailable != null && onlyAvailable) {
-            builder.and((QEvent.event.participantLimit.subtract(QEvent.event.confirmedRequests)).loe(1));
+            builder.and(QEvent.event.participantLimit.subtract(JPAExpressions.select(QRequest.request.id.count())
+                    .from(QRequest.request)
+                    .where(QRequest.request.event.id.eq(QEvent.event.id)
+                            .and(QRequest.request.status.eq(RequestStatus.CONFIRMED)))
+            ).loe(1));
         }
 
         if (paid != null) {
@@ -440,5 +468,31 @@ public class EventServiceImpl implements EventService {
         });
 
         return views;
+    }
+
+    private Long getConfirmedRequests(Long eventId) {
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(QRequest.request.event.id.eq(eventId));
+        builder.and(QRequest.request.status.eq(RequestStatus.CONFIRMED));
+
+        return requestRepository.count(builder);
+    }
+
+    private void setConfirmedRequest(List<? extends EventBaseDto> list) {
+        List<Long> ids = list.stream().map(EventBaseDto::getId).collect(Collectors.toList());
+
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(QRequest.request.event.id.in(ids));
+        builder.and(QRequest.request.status.eq(RequestStatus.CONFIRMED));
+
+        Map<Long, Long> confirmedRequestsByEventId = new JPAQueryFactory(entityManager)
+                .select(QRequest.request.event.id, QRequest.request.id.count())
+                .from(QRequest.request)
+                .where(builder)
+                .groupBy(QRequest.request.event.id)
+                .transform(groupBy(QRequest.request.event.id)
+                        .as(QRequest.request.id.count()));
+
+        list.forEach(t -> t.setConfirmedRequests(confirmedRequestsByEventId.get(t.getId())));
     }
 }
