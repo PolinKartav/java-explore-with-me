@@ -485,7 +485,9 @@ public class EventServiceImpl implements EventService {
         builder.and(QRequest.request.event.id.in(ids));
         builder.and(QRequest.request.status.eq(RequestStatus.CONFIRMED));
 
-        Map<Long, Long> confirmedRequestsByEventId = new JPAQueryFactory(entityManager)
+        Map<Long, Long> confirmedRequestsByEventId;
+
+        confirmedRequestsByEventId = new JPAQueryFactory(entityManager)
                 .select(QRequest.request.event.id, QRequest.request.id.count())
                 .from(QRequest.request)
                 .where(builder)
@@ -493,6 +495,8 @@ public class EventServiceImpl implements EventService {
                 .transform(groupBy(QRequest.request.event.id)
                         .as(QRequest.request.id.count()));
 
-        list.forEach(t -> t.setConfirmedRequests(confirmedRequestsByEventId.get(t.getId())));
+        list.forEach(t -> t.setConfirmedRequests(confirmedRequestsByEventId.get(t.getId()) == null
+                ? 0L
+                : confirmedRequestsByEventId.get(t.getId())));
     }
 }
