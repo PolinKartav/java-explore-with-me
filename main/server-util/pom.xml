@@ -5,17 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>ru.practicum</groupId>
-        <artifactId>explore-with-me</artifactId>
+        <artifactId>main</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>main</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>main-server</module>
-        <module>application</module>
-        <module>server-util</module>
-    </modules>
+    <artifactId>server-util</artifactId>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
