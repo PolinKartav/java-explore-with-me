@@ -259,11 +259,13 @@ public class EventServiceImpl implements EventService {
                 && dto.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
             event.setState(EventStatus.PUBLISHED);
             event.setPublishedOn(LocalDateTime.now());
+            event.setModerationComment(null);
         }
 
         if (dto.getStateAction() != null
                 && dto.getStateAction().equals(StateAction.REJECT_EVENT)) {
             event.setState(EventStatus.CANCELED);
+            event.setModerationComment(dto.getModerationComment());
         }
 
         EventFullDto eventDto = eventMapper.toEventFullDto(eventRepository.save(event));

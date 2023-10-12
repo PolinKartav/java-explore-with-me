@@ -73,6 +73,9 @@ public class Event {
     @Column(name = "paid")
     private Boolean paid;
 
+    @Column(name = "moderation_comment", length = 2000)
+    private String moderationComment;
+
     @Column(name = "participant_limit")
     private Long participantLimit;
 
