@@ -3,13 +3,7 @@ package ru.practicum.ewm.main.server.controller.event;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.main.application.event.EventFullDto;
 import ru.practicum.ewm.main.application.event.EventStatus;
 import ru.practicum.ewm.main.application.event.EventUpdateAdminRequest;
@@ -40,6 +34,7 @@ public class AdminEventController {
             @RequestParam(required = false, name = "rangeEnd")
             @DateTimeFormat(pattern = DATE_TIME_FORMAT) LocalDateTime end,
             @RequestParam(required = false) List<Long> users,
+            @RequestParam(required = false) Boolean onlyPending,
             @RequestParam(required = false) List<Long> categories,
             @RequestParam(required = false) List<EventStatus> states,
             @RequestParam(defaultValue = "0") @Min(0) int from,
@@ -48,6 +43,7 @@ public class AdminEventController {
                 .start(start)
                 .end(end)
                 .users(users)
+                .onlyPending(onlyPending)
                 .categories(categories)
                 .states(states)
                 .from(from)

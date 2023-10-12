@@ -40,6 +40,9 @@ public class EventUpdateAdminRequest extends EventUpdateRequest {
 
     private StateAction stateAction;
 
+    @Size(min = 10, max = 2000)
+    private String moderationComment;
+
     @JsonFormat(pattern = Constants.DATE_TIME_FORMAT)
     @DateAfterValueHourFutureConstraint(value = Constants.ONE_AS_STRING)
     private LocalDateTime eventDate;

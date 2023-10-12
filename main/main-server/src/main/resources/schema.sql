@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS event
     paid               BOOLEAN DEFAULT FALSE,
     request_moderation BOOLEAN DEFAULT TRUE,
     participant_limit  BIGINT  DEFAULT 0,
+    moderation_comment VARCHAR(2000),
     state              VARCHAR(16),
     create_date        TIMESTAMP WITHOUT TIME ZONE,
     published_date     TIMESTAMP WITHOUT TIME ZONE,
